@@ -2,6 +2,12 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { handleAiRequest } from './ai-service.mjs';
 
+try {
+  process.loadEnvFile(new URL('.env', import.meta.url));
+} catch (error) {
+  if (error.code !== 'ENOENT') throw new Error('Unable to read the private .env file beside server.mjs. Check its file permissions.');
+}
+
 const assets = {
   '/': ['index.html', 'text/html'],
   '/index.html': ['index.html', 'text/html'],

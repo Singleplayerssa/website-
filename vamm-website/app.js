@@ -275,40 +275,32 @@ function renderPanel() {
 }
 
 function home() {
-
   const done = completedAcademyCount();
   const features = [
-    ['academy', 'Pick up a short lesson or start with the basics.', 'Knowledge'],
-    ['market', 'Search fictional stocks and place practice orders with your virtual balance.', 'Practice'],
-    ['mentor', 'Ask a question or get feedback on the risk in your virtual portfolio.', 'Perspective'],
-    ['missions', 'Test what you know, practice new skills, and earn XP.', 'Progress'],
-    ['news', 'Follow financial headlines and practice reading the sentiment behind them.', 'Context'],
+    ['academy', 'Make sense of investing with short, approachable lessons.'],
+    ['market', 'Try fictional stocks and practice orders with virtual money.'],
+    ['mentor', 'Talk through a new idea or the risk in your virtual portfolio.'],
+    ['missions', 'Put your knowledge to work with quizzes and challenges.'],
+    ['news', 'Keep up with financial headlines and the stories behind them.'],
   ];
   return `<div class="screen home-screen">
     <section class="hero home-hero">
       <div class="hero-content">
-        <div class="hero-meta"><span class="eyebrow">Student investment lab</span><span class="lab-status">Learn · practice · reflect</span></div>
-        <h1 id="view-title" tabindex="-1">Learn to invest.<span>One move at a time.</span></h1>
-        <p>Build your investing skills with short lessons, market stories, and a virtual account to practice what you learn.</p>
+        <div class="hero-meta"><span class="eyebrow">Welcome to Vamm</span></div>
+        <h1 id="view-title" tabindex="-1">Learn a little.<span>Build your confidence.</span></h1>
+        <p>A space to understand investing, try things out with virtual money, and learn at your own pace.</p>
       </div>
       <figure class="hero-graphic home-illustration">
-        <svg viewBox="0 0 380 248" aria-hidden="true" focusable="false">
-          <rect x="12" y="12" width="356" height="224" rx="20" fill="#eef1ff"/>
-          <rect x="25" y="24" width="330" height="200" rx="14" fill="#fff" stroke="#d9dfef"/>
-          <path d="M45 73H335M45 111H335M45 149H335M45 187H335M92 60V187M150 60V187M208 60V187M266 60V187M324 60V187" fill="none" stroke="#e8ecf6"/>
-          <rect x="45" y="40" width="52" height="5" rx="2.5" fill="#20283e"/>
-          <rect x="104" y="40" width="31" height="5" rx="2.5" fill="#d9dfef"/>
-          <circle cx="315" cy="42" r="3" fill="#d6ef87"/><circle cx="327" cy="42" r="3" fill="#d9dfef"/>
-          <path d="M45 153 73 146 100 156 129 121 157 130 185 99 214 112 242 90 270 105 298 79 327 92V187H45Z" fill="#eef1ff"/>
-          <path d="M45 153 73 146 100 156 129 121 157 130 185 99 214 112 242 90 270 105 298 79 327 92" fill="none" stroke="#3458e8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M45 131 91 135 138 125 185 140 232 129 279 143 327 130" fill="none" stroke="#d58b79" stroke-width="2" stroke-dasharray="4 5" stroke-linecap="round"/>
-          <path d="M242 65V187" stroke="#8d9dc9" stroke-dasharray="3 5"/>
-          <circle cx="242" cy="90" r="9" fill="#d6ef87"/><circle cx="242" cy="90" r="3.5" fill="#20283e"/>
-          <rect x="45" y="202" width="43" height="4" rx="2" fill="#3458e8"/>
-          <rect x="99" y="202" width="29" height="4" rx="2" fill="#d58b79"/>
-          <rect x="290" y="199" width="37" height="10" rx="5" fill="#edf2df"/>
+        <svg viewBox="0 0 240 180" aria-hidden="true" focusable="false">
+          <circle cx="122" cy="89" r="70" fill="#f0f6fc"/>
+          <path d="M42 68c26-7 49-2 76 14v72c-27-16-50-21-76-14Z" fill="#fff" stroke="#1964c8" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M118 82c27-16 50-21 76-14v72c-26-7-49-2-76 14Z" fill="#fff" stroke="#1964c8" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M57 86c16-2 31 2 46 10m-46 6c16-2 31 2 46 10m-46 6c12-1 23 1 33 5" fill="none" stroke="#bfd4eb" stroke-width="3" stroke-linecap="round"/>
+          <path d="m134 121 14-16 13 6 17-23" fill="none" stroke="#1964c8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="181" cy="48" r="24" fill="#fff0e8" stroke="#c74424" stroke-width="2"/>
+          <path d="M181 36v24m7-20h-10a5 5 0 0 0 0 10h6a5 5 0 0 1 0 10h-11" transform="translate(0 -2)" fill="none" stroke="#c74424" stroke-width="2" stroke-linecap="round"/>
+          <path d="M56 35v12m-6-6h12m145 61v8m-4-4h8" stroke="#1964c8" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <figcaption class="illustration-caption">Illustrative learning chart</figcaption>
       </figure>
     </section>
     <div class="metrics home-metrics">
@@ -317,11 +309,11 @@ function home() {
       <div class="home-metric xp"><span class="metric-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m13 3-8 11h6l-1 7 9-12h-6l1-6Z"/></svg></span>${metric('Learning XP', xpTotal() + ' XP', 'Academy milestones, quizzes and missions')}</div>
     </div>
     <section class="screen home-features" aria-labelledby="available-title">
-      <div class="section-heading"><div><span class="section-index">Five ways to learn</span><h2 id="available-title">What’s on Vamm</h2><p>Select a feature in the left rail to get started.</p></div></div>
+      <div class="section-heading"><div><h2 id="available-title">Find your next step</h2><p>Five spaces to learn, practice, and stay curious. Open one from the menu.</p></div></div>
       <ul class="feature-overview">
-        ${features.map(([key, description, kind], index) => `<li class="card feature-card" data-accent="${key}">
-          <span class="feature-number" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span><div class="feature-visual">${featureImage(key)}</div>
-          <div class="feature-copy"><span class="feature-kind">${kind}</span><h3>${sections[key]}</h3><p>${description}</p></div>
+        ${features.map(([key, description]) => `<li class="card feature-card" data-accent="${key}">
+          <div class="feature-visual">${featureImage(key)}</div>
+          <div class="feature-copy"><h3>${sections[key]}</h3><p>${description}</p></div>
         </li>`).join('')}
       </ul>
     </section>
@@ -1619,6 +1611,7 @@ function requestChatDeletion(id, trigger) {
   const options = trigger.closest('.chat-options');
   chatDeleteTrigger = options?.querySelector('summary') ?? trigger;
   if (options) options.open = false;
+  if (narrowScreen.matches) setMenu(false);
   dialog.querySelector('#chat-delete-description').textContent = '“' + selected.title + '” will be removed from saved chats in this browser.';
   dialog.showModal();
 }
@@ -1626,7 +1619,7 @@ function requestChatDeletion(id, trigger) {
 function cancelChatDeletion(restoreFocus = true) {
   main.querySelector('#chat-delete-dialog')?.close();
   pendingChatDeleteId = null;
-  if (restoreFocus) (chatDeleteTrigger?.isConnected ? chatDeleteTrigger : panel.querySelector('[data-action="new-chat"]'))?.focus();
+  if (restoreFocus) (panel.hidden ? menu : chatDeleteTrigger?.isConnected ? chatDeleteTrigger : panel.querySelector('[data-action="new-chat"]'))?.focus();
   chatDeleteTrigger = null;
 }
 
@@ -1642,7 +1635,7 @@ function confirmChatDeletion() {
   if (active) startChat();
   else {
     renderPanel();
-    panel.querySelector('[data-action="new-chat"]')?.focus();
+    (panel.hidden ? menu : panel.querySelector('[data-action="new-chat"]'))?.focus();
   }
   announce(memoryOnly.has(sessionKey) ? 'Chat removed for this visit. Browser storage could not save the change.' : 'Chat deleted.');
 }

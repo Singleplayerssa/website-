@@ -33,7 +33,7 @@
   dialog.setAttribute('aria-describedby', 'source-search-provider');
   dialog.innerHTML = `<header class="source-search-header"><div><span class="eyebrow">Research</span><h2 id="source-search-title">Search sources</h2></div><button type="button" class="icon-button" aria-label="Close source search" data-close-source-search>×</button></header>
     <div class="source-search-body">
-      <p id="source-search-provider">Google Search via Gemini. Selecting Search sends your question and current section.</p>
+      <p id="source-search-provider">Live web search via OpenAI. Selecting Search sends your question and current section.</p>
       <form id="source-search-form" class="source-search-form">
         <label for="source-search-query">Question</label>
         <textarea id="source-search-query" required minlength="3" maxlength="400" rows="3" autofocus></textarea>
@@ -44,7 +44,6 @@
         <h3 id="source-search-result-title" tabindex="-1">Research result</h3>
         <p id="source-search-answer" class="source-search-answer"></p>
         <div id="source-search-source-list"><h4>Sources</h4><ol id="source-search-sources"></ol></div>
-        <div id="source-search-suggestion-box"></div>
       </section>
     </div>`;
   document.body.append(dialog);
@@ -57,7 +56,6 @@
   const result = dialog.querySelector('#source-search-result');
   const answer = dialog.querySelector('#source-search-answer');
   const sourceList = dialog.querySelector('#source-search-sources');
-  const suggestions = dialog.querySelector('#source-search-suggestion-box');
   let activeRequest = null;
   let section = 'home';
 
@@ -85,7 +83,6 @@
     result.hidden = true;
     answer.replaceChildren();
     sourceList.replaceChildren();
-    suggestions.replaceChildren();
   }
 
   function safeUrl(value) {
@@ -104,41 +101,6 @@
     anchor.textContent = text;
     anchor.setAttribute('aria-label', `${text}${text === source.title ? '' : ' ' + source.title} (opens in a new tab)`);
     return anchor;
-  }
-
-  const snippetElements = new Set('a div span style svg g path circle rect title text p small strong b em i ul li'.split(' '));
-  const snippetAttributes = new Set('id class style title role aria-label aria-hidden dir lang viewbox xmlns x y width height d fill fill-rule stroke stroke-width stroke-linecap stroke-linejoin cx cy r rx ry opacity transform'.split(' '));
-
-  function suggestionFrame(html) {
-    if (typeof html !== 'string' || !html.trim() || html.length > 100_000) return null;
-    // Parsing in a detached template keeps provider markup inert before filtering.
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    for (const element of template.content.querySelectorAll('*')) {
-      if (!snippetElements.has(element.localName.toLowerCase())) {
-        element.remove();
-        continue;
-      }
-      const isLink = element.localName === 'a' && element.namespaceURI === 'http://www.w3.org/1999/xhtml';
-      const url = isLink ? safeUrl(element.getAttribute('href')) : null;
-      if (element.localName === 'a' && !url) { element.remove(); continue; }
-      for (const attribute of [...element.attributes]) {
-        if (!snippetAttributes.has(attribute.name.toLowerCase())) element.removeAttributeNode(attribute);
-      }
-      if (url) {
-        element.setAttribute('href', url.href);
-        element.setAttribute('target', '_blank');
-        element.setAttribute('rel', 'noopener noreferrer');
-      }
-    }
-    if (!template.content.querySelector('a[href]')) return null;
-    const frame = document.createElement('iframe');
-    frame.id = 'source-search-suggestions';
-    frame.title = 'Google Search suggestions';
-    frame.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox');
-    frame.referrerPolicy = 'no-referrer';
-    frame.srcdoc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><style>html{color-scheme:light}body{margin:10px;overflow-wrap:anywhere;font:14px system-ui,sans-serif}</style></head><body>${template.innerHTML}</body></html>`;
-    return frame;
   }
 
   function showResult(payload) {
@@ -169,8 +131,6 @@
       item.append(sourceLink(source, source.title));
       sourceList.append(item);
     });
-    const frame = suggestionFrame(payload.suggestionsHtml);
-    if (frame) suggestions.append(frame);
     result.hidden = false;
     showStatus('Search complete.');
     dialog.querySelector('#source-search-result-title').focus();
@@ -215,7 +175,7 @@
     activeRequest = request;
     clearResult();
     busy(true);
-    showStatus('Searching Google for sources…');
+    showStatus('Searching the web for sources…');
     try {
       const response = await fetch('/api/research', {
         method: 'POST', mode: 'same-origin', credentials: 'omit', cache: 'no-store', redirect: 'error',
