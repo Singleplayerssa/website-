@@ -24,7 +24,7 @@ The OpenAI Responses API handles [Mentor replies](https://developers.openai.com/
 
 ## Try the demo
 
-1. **Home** lists the features and shows your available virtual cash, completed lessons, and learning XP. Virtual cash changes when you buy or sell in Simulator. Select a feature icon in the left rail; use the panel button at the top to collapse or reopen the sidebar.
+1. **Home** lists the features and shows your available virtual cash, completed lessons, and learning XP. Virtual cash changes when you buy or sell in Simulator. Select a feature in the desktop rail or phone's bottom navigation; use the panel button at the top to collapse or reopen the sidebar.
 2. Open **Learning Academy** and choose a course from the catalog. Each course shows its level, duration, and an expandable **Course outline**. The ten lessons cover stock basics, portfolio risk, company research, charts, compounding, inflation, and fees. Each has a diagram, learning goals, key takeaways, and a short reflection. The first lesson of each course is available; **Lesson Complete** and **Next Lesson** unlock the following step within that course. Scored quizzes stay in **Missions & Challenges**.
 3. In **Market & Simulator**, use the three links under **Practice Workspace**. **Real Market** opens TradingView on NASDAQ:AAPL with daily candles and symbol switching. **Simulator** lets you buy and sell fictional stocks with virtual IDR. Its generated demo prices and chart update every five seconds while Simulator or Portfolio is visible. **Portfolio** shows cash, holdings, profit/loss, and the fixed price of each completed transaction. Transaction history has **10, 20, or 50 rows per page** with Previous/Next controls; pagination does not delete records. The Home balance shows available virtual cash.
 4. Open **AI Investment Mentor** and send a question in the compact chat panel. **New Chat** starts an empty conversation, and **Your chats** reopens saved conversations. Open a chat’s **⋯** menu and choose **Delete chat** to remove it after confirmation. A conversation is saved after its first message. Reopen the page or choose **End demo session** in **Demo profile** to begin with a fresh chat while keeping earlier messages.
@@ -44,12 +44,19 @@ Sentiment practice stories and labels are curated examples. The demo profile is 
 
 TradingView charts, current news, and external learning links require an internet connection and depend on their publishers.
 
+## Motion and appearance
+
+The midnight studio design combines a dark navigation shell, an illustrated learning orbit, and bright reading panels. Cards reveal as they enter view, with gentle hover feedback and decorative movement in the Home illustration. The illustration is not market data. Financial values are displayed directly without decorative counting animations.
+
+Use the **Motion on/off** button in the top bar to pause or resume decorative animation. This preference stays on the device. The operating system's reduced-motion setting always takes priority. Decorative motion pauses when the page is hidden, and the Home illustration pauses outside the viewport. Without `motion.js`, all content remains visible and interactive with decorations still.
+
 ## Project files
 
 | File | Purpose |
 | --- | --- |
 | `index.html`, `style.css` | Site structure, responsive layout, and colors. |
 | `app.js`, `model.js` | Page behavior, learning content, quizzes, simulated trades, and progress. |
+| `motion.js` | Optional reveal effects, visibility handling, and the saved motion preference. |
 | `news-feed.js`, `web-research.js` | TradingView news and the shared OpenAI source lookup. |
 | `server.mjs`, `ai-service.mjs` | Local hosting and the server-side OpenAI routes. |
 | `.env.example`, `.gitignore` | Local key template and rules that exclude private key files from Git. |

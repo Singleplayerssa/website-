@@ -286,20 +286,53 @@ function home() {
   return `<div class="screen home-screen">
     <section class="hero home-hero">
       <div class="hero-content">
-        <div class="hero-meta"><span class="eyebrow">Welcome to Vamm</span></div>
-        <h1 id="view-title" tabindex="-1">Learn a little.<span>Build your confidence.</span></h1>
-        <p>A space to understand investing, try things out with virtual money, and learn at your own pace.</p>
+        <div class="hero-meta"><span class="hero-beacon" aria-hidden="true"></span><span class="eyebrow">The Vamm learning studio</span></div>
+        <h1 id="view-title" tabindex="-1">Big ideas.<span>Small first steps.</span></h1>
+        <p>Find your footing in investing. Learn the basics, test ideas with virtual money, and ask better questions.</p>
+        <ol class="hero-principles" aria-label="Your learning loop"><li><span>01</span> Learn</li><li><span>02</span> Practice</li><li><span>03</span> Reflect</li></ol>
+        <p class="hero-note">Real curiosity. Virtual money. Your own pace.</p>
       </div>
-      <figure class="hero-graphic home-illustration">
-        <svg viewBox="0 0 240 180" aria-hidden="true" focusable="false">
-          <circle cx="122" cy="89" r="70" fill="#f0f6fc"/>
-          <path d="M42 68c26-7 49-2 76 14v72c-27-16-50-21-76-14Z" fill="#fff" stroke="#1964c8" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M118 82c27-16 50-21 76-14v72c-26-7-49-2-76 14Z" fill="#fff" stroke="#1964c8" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M57 86c16-2 31 2 46 10m-46 6c16-2 31 2 46 10m-46 6c12-1 23 1 33 5" fill="none" stroke="#bfd4eb" stroke-width="3" stroke-linecap="round"/>
-          <path d="m134 121 14-16 13 6 17-23" fill="none" stroke="#1964c8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="181" cy="48" r="24" fill="#fff0e8" stroke="#c74424" stroke-width="2"/>
-          <path d="M181 36v24m7-20h-10a5 5 0 0 0 0 10h6a5 5 0 0 1 0 10h-11" transform="translate(0 -2)" fill="none" stroke="#c74424" stroke-width="2" stroke-linecap="round"/>
-          <path d="M56 35v12m-6-6h12m145 61v8m-4-4h8" stroke="#1964c8" stroke-width="2" stroke-linecap="round"/>
+      <figure class="hero-graphic home-illustration" aria-hidden="true">
+        <svg class="learning-orbit" viewBox="0 0 520 420" fill="none" focusable="false">
+          <defs>
+            <linearGradient id="orbit-panel" x1="148" y1="117" x2="368" y2="306" gradientUnits="userSpaceOnUse"><stop stop-color="#243747"/><stop offset="1" stop-color="#142332"/></linearGradient>
+            <linearGradient id="orbit-chart" x1="0" y1="196" x2="0" y2="272" gradientUnits="userSpaceOnUse"><stop stop-color="#8df0d2" stop-opacity=".28"/><stop offset="1" stop-color="#8df0d2" stop-opacity="0"/></linearGradient>
+          </defs>
+          <circle cx="260" cy="210" r="142" fill="#8df0d2" fill-opacity=".025"/>
+          <circle class="orbit-ring" cx="260" cy="210" r="157" stroke="#8df0d2" stroke-opacity=".22" stroke-dasharray="160 24 6 24"/>
+          <circle class="orbit-ring orbit-ring-outer" cx="260" cy="210" r="192" stroke="#b0c1d2" stroke-opacity=".17" stroke-dasharray="2 11"/>
+          <path d="M68 210h384M260 18v384" stroke="#a9c7d9" stroke-opacity=".08" stroke-dasharray="4 8"/>
+          <g class="orbit-core">
+            <rect x="146" y="116" width="228" height="191" rx="22" fill="url(#orbit-panel)" stroke="#8df0d2" stroke-opacity=".28"/>
+            <circle cx="168" cy="139" r="3" fill="#ffae79"/><circle cx="179" cy="139" r="3" fill="#8df0d2" fill-opacity=".6"/><circle cx="190" cy="139" r="3" fill="#8df0d2" fill-opacity=".25"/>
+            <text x="168" y="170" fill="#e7f5f1" font-size="14" font-weight="600">Practice, not prediction</text>
+            <text x="168" y="188" fill="#9ab5be" font-size="10" letter-spacing="1.8">A SPACE TO EXPERIMENT</text>
+            <path d="M168 211h184m-184 28h184m-184 28h184" stroke="#b4d9d1" stroke-opacity=".09"/>
+            <path d="m168 251 23-13 23 8 24-27 23 10 24-29 22 13 23-8 22 16v51H168Z" fill="url(#orbit-chart)"/>
+            <path class="signal-line" d="m168 251 23-13 23 8 24-27 23 10 24-29 22 13 23-8 22 16" pathLength="1" stroke="#8df0d2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="signal-point" cx="352" cy="221" r="5" fill="#8df0d2" stroke="#203444" stroke-width="3"/>
+            <text x="168" y="288" fill="#9ab5be" font-size="10">Illustrative learning path</text><path d="m332 282 5 5 11-11" stroke="#ffae79" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <g class="orbit-token orbit-token-learn">
+            <rect x="40" y="62" width="155" height="65" rx="16" fill="#e2f8ef"/>
+            <rect x="53" y="75" width="39" height="39" rx="12" fill="#c7eadc"/>
+            <path d="M73 85v20m0-18c-5-4-10-3-13-2v16c4-1 8 0 13 4 5-4 9-5 13-4V85c-3-1-8-2-13 2Z" stroke="#1b6651" stroke-width="1.8" stroke-linejoin="round"/>
+            <text x="103" y="88" fill="#47836f" font-size="9" letter-spacing="1.5">STAY CURIOUS</text><text x="103" y="108" fill="#163f34" font-size="19" font-weight="600">Learn</text>
+          </g>
+          <g class="orbit-token orbit-token-practice">
+            <rect x="360" y="167" width="150" height="65" rx="16" fill="#ffdec6"/>
+            <rect x="373" y="180" width="39" height="39" rx="12" fill="#f7c7a6"/>
+            <path d="M382 207v-6m10 6v-18m10 18v-12" stroke="#8e4c2f" stroke-width="3" stroke-linecap="round"/>
+            <text x="423" y="193" fill="#9b6143" font-size="9" letter-spacing="1.5">TRY AN IDEA</text><text x="423" y="213" fill="#573825" font-size="19" font-weight="600">Practice</text>
+          </g>
+          <g class="orbit-token orbit-token-reflect">
+            <rect x="81" y="309" width="166" height="65" rx="16" fill="#e1e7ff"/>
+            <rect x="94" y="322" width="39" height="39" rx="12" fill="#cbd5f5"/>
+            <path d="M107 346c-8-9 7-17 13-9 4 5-2 9-2 13h-9v-4Zm3 8h7" stroke="#4e5790" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="144" y="335" fill="#6975a5" font-size="9" letter-spacing="1.5">CONNECT DOTS</text><text x="144" y="355" fill="#384368" font-size="19" font-weight="600">Reflect</text>
+          </g>
+          <circle class="orbit-speck" cx="350" cy="55" r="6" fill="#8df0d2"/><circle class="orbit-speck" cx="399" cy="335" r="4" fill="#ffae79"/><circle class="orbit-speck" cx="70" cy="231" r="4" fill="#becbff"/>
+          <path d="M418 84v14m-7-7h14M295 354v10m-5-5h10" stroke="#8df0d2" stroke-opacity=".7" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </figure>
     </section>
@@ -311,8 +344,8 @@ function home() {
     <section class="screen home-features" aria-labelledby="available-title">
       <div class="section-heading"><div><h2 id="available-title">Find your next step</h2><p>Five spaces to learn, practice, and stay curious. Open one from the menu.</p></div></div>
       <ul class="feature-overview">
-        ${features.map(([key, description]) => `<li class="card feature-card" data-accent="${key}">
-          <div class="feature-visual">${featureImage(key)}</div>
+        ${features.map(([key, description], index) => `<li class="card feature-card" data-accent="${key}">
+          <div class="feature-visual">${featureImage(key)}<span class="feature-number" aria-hidden="true">0${index + 1}</span><svg class="feature-motif" viewBox="0 0 160 50" fill="none" aria-hidden="true" focusable="false"><path d="M1 39h23l17-23 21 16 24-24 24 13 23-10h26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="86" cy="8" r="4" fill="currentColor"/></svg></div>
           <div class="feature-copy"><h3>${sections[key]}</h3><p>${description}</p></div>
         </li>`).join('')}
       </ul>

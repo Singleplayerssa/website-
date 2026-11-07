@@ -14,6 +14,7 @@ const assets = {
   '/app.js': ['app.js', 'text/javascript'],
   '/news-feed.js': ['news-feed.js', 'text/javascript'],
   '/web-research.js': ['web-research.js', 'text/javascript'],
+  '/motion.js': ['motion.js', 'text/javascript'],
   '/model.js': ['model.js', 'text/javascript'],
   '/style.css': ['style.css', 'text/css'],
   '/images/brand.svg': ['images/brand.svg', 'image/svg+xml'],
