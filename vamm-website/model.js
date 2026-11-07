@@ -111,6 +111,35 @@ const simulationModel = (() => {
     return Array.isArray(history) && history.every(price => Number.isSafeInteger(price) && price > 0) ? history.slice(-60) : [];
   }
 
+  function quoteCandles(account, stock) {
+    const values = quoteSeries(account, stock);
+    const current = quotePrice(account, stock);
+    const tick = account?.quoteTick === undefined ? 0 : account.quoteTick;
+    if (!values.length || current === null || values.at(-1) !== current || !Number.isSafeInteger(tick) || tick < 0
+      || typeof stock.ticker !== 'string' || !stock.ticker) return [];
+    const seed = [...stock.ticker].reduce((total, letter) => total + letter.charCodeAt(0), 0);
+    const variation = (index, range) => (((index % range + range) % range) * 17 + seed) % range;
+    const price = value => Math.max(1, Math.min(Number.MAX_SAFE_INTEGER, Math.round(value)));
+    let first = tick - values.length + 1;
+    // shortcut: earlier history and candle ranges are illustrative; replace this projection when real OHLC data is connected.
+    while (values.length < 61) {
+      values.unshift(price(values[0] / (1 + (variation(first, 23) - 11) / 1000)));
+      first--;
+    }
+    return values.slice(1).map((close, offset) => {
+      const open = values[offset];
+      const index = first + offset + 1;
+      const upper = Math.max(open, close);
+      const lower = Math.min(open, close);
+      return {
+        index, open,
+        high: price(upper + Math.max(1, Math.round(upper * (variation(index, 7) + 1) / 2000))),
+        low: price(lower - Math.max(1, Math.round(lower * (variation(index, 11) + 1) / 3000))),
+        close,
+      };
+    });
+  }
+
   function advanceDemoQuotes(account, now) {
     if (!account || typeof account !== 'object') return account;
     const previousTick = account.quoteTick === undefined ? 0 : account.quoteTick;
@@ -656,7 +685,7 @@ const simulationModel = (() => {
 
   return {
     lessons, assets, annualRates, inflation, stageAt, scenarios, watchlist, advance, market, sum,
-    startingCash, lastMarketDay, stocks, newAccount, quotePrice, quoteSeries, advanceDemoQuotes, portfolio, executeTrade, courses, quizzes, quizPacks, quizCounts, validateQuizQuestions, scoreQuiz, news, academySources, academyResources, academyTracks, academyMilestones, academyPointsPerLesson,
+    startingCash, lastMarketDay, stocks, newAccount, quotePrice, quoteSeries, quoteCandles, advanceDemoQuotes, portfolio, executeTrade, courses, quizzes, quizPacks, quizCounts, validateQuizQuestions, scoreQuiz, news, academySources, academyResources, academyTracks, academyMilestones, academyPointsPerLesson,
   };
 })();
 

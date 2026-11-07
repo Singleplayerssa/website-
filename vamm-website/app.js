@@ -1,7 +1,7 @@
 const {
   lessons, assets, annualRates, inflation, stageAt, scenarios, watchlist, advance, market, sum,
   startingCash, lastMarketDay, stocks, newAccount, portfolio, executeTrade, courses, quizzes, news, academySources, academyResources,
-  quotePrice, quoteSeries, advanceDemoQuotes,
+  quotePrice, quoteSeries, quoteCandles, advanceDemoQuotes,
   academyTracks, academyMilestones, academyPointsPerLesson,
   quizPacks, quizCounts, validateQuizQuestions, scoreQuiz,
 } = simulationModel;
@@ -588,10 +588,38 @@ function dailyChange(stock) {
 }
 
 function stockChart(stock) {
-  const values = quoteSeries(student.account, stock);
-  if (!values.length || quotePrice(student.account, stock) === null) return '<p class="error">Demo chart data is unavailable. Stored holdings and trades have been kept.</p>';
-  const description = `${stock.name} · Generated educational price history from ${rupiah(values[0])} to ${rupiah(values.at(-1))} across ${values.length} quotes. Rolling history keeps up to 60 quotes.`;
-  return `${lineChart(values, description, rupiah, null, 'Quote')}<figcaption class="chart-caption">${description}</figcaption>`;
+  const candles = quoteCandles(student.account, stock);
+  if (!candles.length) return '<p class="error">Demo chart data is unavailable. Stored holdings and trades have been kept.</p>';
+  const latest = candles.at(-1);
+  const low = Math.min(...candles.map(candle => candle.low));
+  const high = Math.max(...candles.map(candle => candle.high));
+  const padding = Math.max((high - low) * .12, high * .002, 1);
+  const bottom = Math.max(0, low - padding);
+  const top = high + padding;
+  const y = value => 282 - (value - bottom) * 264 / (top - bottom);
+  const step = 580 / candles.length;
+  const levels = Array.from({ length: 5 }, (_, index) => bottom + (top - bottom) * index / 4);
+  const description = `${stock.name}: ${candles.length} simulated candlesticks. Latest close ${rupiah(latest.close)}. Each candle shows its open, high, low, and close.`;
+  return `<div class="candle-terminal" style="--current-candle:${latest.close >= latest.open ? '#5ce0b5' : '#ff8f99'}">
+    <div class="candle-toolbar"><strong>${stock.ticker} <span>/ IDR</span></strong><span>Candlesticks · 5 s updates</span></div>
+    <dl class="candle-ohlc">${[['Open', latest.open], ['High', latest.high], ['Low', latest.low], ['Close', latest.close]].map(([label, value]) => `<div><dt>${label}</dt><dd>${rupiah(value)}</dd></div>`).join('')}</dl>
+    <div class="candle-plot">
+      <svg class="candlestick-chart" viewBox="0 0 600 300" preserveAspectRatio="none" role="img" aria-label="${escape(description)}">
+        <g class="candle-grid">${levels.map(value => `<path d="M8 ${y(value)}H588"/>`).join('')}${[0, 15, 30, 45, 60].map(index => `<path d="M${8 + index * step} 18V282"/>`).join('')}</g>
+        ${candles.map((candle, index) => {
+          const x = 8 + (index + .5) * step;
+          const direction = candle.close > candle.open ? 'up' : candle.close < candle.open ? 'down' : 'flat';
+          const height = Math.max(1.8, Math.abs(y(candle.open) - y(candle.close)));
+          const bodyY = (y(candle.open) + y(candle.close) - height) / 2;
+          return `<g class="candle" data-direction="${direction}" data-close="${candle.close}" data-index="${candle.index}"><title>${escape(`Example candle ${index + 1}: Open ${rupiah(candle.open)}, high ${rupiah(candle.high)}, low ${rupiah(candle.low)}, close ${rupiah(candle.close)}`)}</title><line x1="${x}" x2="${x}" y1="${y(candle.high)}" y2="${y(candle.low)}" vector-effect="non-scaling-stroke"/><rect x="${x - step * .33}" y="${bodyY}" width="${step * .66}" height="${height}" rx=".5"/></g>`;
+        }).join('')}
+        <path class="candle-current" d="M8 ${y(latest.close)}H588"/>
+      </svg>
+      <div class="candle-price-axis" aria-hidden="true">${levels.map(value => `<span class="candle-axis-label" style="top:${y(value) / 3}%">${rupiah(value)}</span>`).join('')}<span class="candle-price-tag" data-price="${latest.close}" style="top:${y(latest.close) / 3}%">${rupiah(latest.close)}</span></div>
+    </div>
+    <div class="candle-time-axis" aria-hidden="true"><span>Earlier</span><span>30 quotes ago</span><span>Latest</span></div>
+    <div class="candle-legend"><span><i class="candle-key up" aria-hidden="true"></i>Close above open</span><span><i class="candle-key down" aria-hidden="true"></i>Close below open</span></div>
+  </div><figcaption class="chart-caption">60 example candles with a new candle every 5 seconds while this workspace is active. Earlier history and candle ranges are simulated for practice.</figcaption>`;
 }
 
 function stockRows() {
