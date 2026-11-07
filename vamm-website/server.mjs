@@ -21,7 +21,7 @@ const assets = {
 const port = Number(process.argv[2] ?? 8000);
 const server = http.createServer({ requestTimeout: 15_000, headersTimeout: 10_000 }, async (request, response) => {
   const path = request.url.split('?')[0];
-  if (path === '/api/quiz' || path === '/api/research') {
+  if (path === '/api/quiz' || path === '/api/mentor' || path === '/api/research') {
     await handleAiRequest(request, response, path);
     return;
   }

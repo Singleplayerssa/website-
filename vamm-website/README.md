@@ -2,7 +2,7 @@
 
 Student Investment Lab by the CaGa CaGa team.
 
-Extract the ZIP and open the whole folder in VS Code. Open `index.html` in your browser or use Live Server for a static preview. Use the included Node.js server for OpenAI quizzes and Google lookup. Keep all HTML, CSS, JavaScript, and `images/` files together.
+Extract the ZIP and open the whole folder in VS Code. Open `index.html` in your browser or use Live Server for a static preview. Use the included Node.js server for the OpenAI Mentor, quizzes, and Google lookup. Keep all HTML, CSS, JavaScript, and `images/` files together.
 
 To run the included local server, open a VS Code terminal in this folder with Node.js 22 or newer:
 
@@ -12,14 +12,15 @@ node server.mjs
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000). If port 8000 is in use, run `node server.mjs 8080` and open [http://127.0.0.1:8080](http://127.0.0.1:8080).
 
-## Connect live quizzes and Google lookup
+## Connect the AI Mentor, quizzes, and Google lookup
 
-1. Copy `.env.example` to `.env` in this folder. Set `OPENAI_API_KEY` to your [OpenAI API key](https://developers.openai.com/api/docs/quickstart) for quiz generation. Set `GEMINI_API_KEY` to your [Google AI Studio API key](https://ai.google.dev/gemini-api/docs/api-key) for Google Search lookup. Each key enables its own feature. Keep `.env` on your computer.
+1. Copy `.env.example` to `.env` in the folder containing `server.mjs`. Set `OPENAI_API_KEY` to your [OpenAI API key](https://platform.openai.com/api-keys) for Mentor chat and quiz generation. Set `GEMINI_API_KEY` to your [Google AI Studio API key](https://ai.google.dev/gemini-api/docs/api-key) if you want Google Search lookup. Keep `.env` private on your computer.
 2. Start the server from that folder with `node --env-file=.env server.mjs` (append `8080` if port 8000 is busy). Use the localhost address printed in the terminal. The server reads the keys; no keys belong in HTML, browser JavaScript, or GitHub.
-3. In **Missions & Challenges → Quiz Center**, choose **Stock Basics**, **Risk Detective**, or **Facts, Opinions & News**. Select **5, 10, or 15 questions**, then click **Start Quiz**. The server sends the selected topic and question count to OpenAI. The key stays on the server. A reviewed five-question sample is available when you want to practice without AI.
-4. Use **Search sources** in the top bar from any section. Submit a question to look up current sources through Google Search. Results show links to the sources. The lookup sends only the submitted question and section; it does not send your saved chats, portfolio, or trades.
+3. Open **AI Investment Mentor** and send an investing question. The **Mentor · OpenAI** label identifies a generated reply. OpenAI receives the question and up to four preceding messages from that chat. Vamm saves the conversation in your browser. If OpenAI is unavailable, the chat labels the scripted answer **Mentor · Practice**. The **Review my virtual portfolio** shortcut uses the simulator’s calculations in your browser.
+4. In **Missions & Challenges → Quiz Center**, choose **Stock Basics**, **Risk Detective**, or **Facts, Opinions & News**. Select **5, 10, or 15 questions**, then click **Start Quiz**. The server sends the selected topic and question count to OpenAI. A reviewed five-question sample is available when you want to practice without AI.
+5. Use **Search sources** in the top bar from any section. Submit a question to look up current sources through Google Search. Results show links to the sources. The lookup sends only the submitted question and section.
 
-The [OpenAI Responses API](https://developers.openai.com/api/docs/guides/structured-outputs) generates quizzes based on the selected course. [Google Search grounding](https://ai.google.dev/gemini-api/docs/generate-content/google-search?hl=en) powers source lookup. The keys are optional for the offline practice features. The local server binds to `127.0.0.1`; this setup is for local testing.
+The OpenAI Responses API handles [Mentor replies](https://developers.openai.com/api/docs/guides/text) and [quiz generation](https://developers.openai.com/api/docs/guides/structured-outputs). [Google Search grounding](https://ai.google.dev/gemini-api/docs/generate-content/google-search?hl=en) powers source lookup. You can use the practice features without keys. The Node server runs on `127.0.0.1` for local testing. A live site needs a Node host with private server environment variables and access controls for the paid API routes.
 
 ## Try the demo
 
@@ -39,9 +40,9 @@ Your progress, trades, and conversations are saved in the current browser at the
 
 Simulator prices are generated examples. They update independently of the external TradingView chart.
 
-The Mentor uses scripted educational responses. Sentiment practice stories and labels are curated examples, and simulator trading data is generated. The demo profile is stored locally. Feature artwork and the brand mark are local SVG files in `images/` and can be replaced with your own artwork.
+Sentiment practice stories and labels are curated examples. The demo profile is stored locally. Feature artwork and the brand mark are local SVG files in `images/` and can be replaced with your own artwork.
 
-TradingView charts, current news, and external learning links require an internet connection and depend on their publishers. The optional local server adds API routes for quiz generation and source lookup. TradingView continues to supply its chart and news directly.
+TradingView charts, current news, and external learning links require an internet connection and depend on their publishers.
 
 ## Project files
 

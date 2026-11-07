@@ -48,6 +48,8 @@ let sessions = loadSessions();
 let quizRecords = readQuizRecords() ?? {};
 const unsavedQuizDrafts = new Map();
 const unsavedQuizResults = new Map();
+const mentorRequests = new Map();
+const mentorHint = 'Practice with virtual money. When connected, OpenAI receives your message and recent chat.';
 let page = route();
 let renderedHash = location.hash;
 let chat = null;
@@ -1307,16 +1309,19 @@ function profileScreen() {
 function messageBubbles(items) {
   return items.map(item => {
     const isStudent = item.role === 'You';
-    return `<div class="bubble${isStudent ? ' user' : ''}"><strong>${isStudent ? 'You' : 'Mentor'}</strong><p>${escape(item.text)}</p></div>`;
+    const label = isStudent ? 'You' : item.source === 'openai' ? 'Mentor · OpenAI' : item.source === 'practice' ? 'Mentor · Practice' : 'Mentor';
+    return `<div class="bubble${isStudent ? ' user' : ''}"><strong>${label}</strong><p>${escape(item.text)}</p></div>`;
   }).join('');
 }
 
 function mentor() {
   const messages = chat?.messages ?? [];
+  const pending = mentorRequests.has(chat?.id);
+  const notice = messages.at(-1)?.notice ?? '';
   return `<div class="screen chat-screen">
     <div class="row chat-header">
       <h1 class="sr" id="view-title" tabindex="-1">AI Investment Mentor</h1>
-      <span class="eyebrow">Learning conversation</span>${chip('Scripted demo', 'neutral')}
+      <span class="eyebrow">Learning conversation</span>${chip('Virtual money', 'neutral')}
     </div>
     ${messages.length ? `<div class="log" role="log" aria-label="Conversation" tabindex="0">${messageBubbles(messages)}</div>` : `<div class="chat-intro">
       <div class="chat-welcome"><div class="mentor-mark">${featureImage('mentor')}</div>
@@ -1329,9 +1334,10 @@ function mentor() {
       <form id="mentor-form" class="composer">
         <label class="sr" for="message">Ask the mentor</label>
         <input id="message" name="message" required maxlength="500" placeholder="Ask about investing…" autocomplete="off">
-        <button class="primary">Send <span aria-hidden="true">↑</span></button>
+        <button class="primary"${pending ? ' disabled' : ''}>Send <span aria-hidden="true">↑</span></button>
       </form>
-      <small class="composer-note">Practice and learning with virtual money.</small>
+      <small id="mentor-status" class="composer-note" role="status">${escape(pending ? 'Waiting for OpenAI…' : notice)}</small>
+      <small class="composer-note">${mentorHint}</small>
     </div>
     <dialog class="chat-delete-dialog" id="chat-delete-dialog" aria-labelledby="chat-delete-title" aria-describedby="chat-delete-description"><h2 id="chat-delete-title">Delete chat?</h2><p id="chat-delete-description"></p><div class="dialog-actions"><button type="button" data-action="cancel-delete-chat" autofocus>Cancel</button><button type="button" class="danger" data-action="confirm-delete-chat">Delete</button></div></dialog>
   </div>`;
@@ -1367,8 +1373,9 @@ function mentorReply(question) {
   return 'In this demo I can explain stocks, dividends, P/E, market cap, diversification, and the risk in your virtual portfolio. Try one of those topics.';
 }
 
-function sendMentor(question) {
-  const text = question.trim();
+async function sendMentor(question) {
+  if (mentorRequests.has(chat?.id)) return;
+  const text = question.trim().slice(0, 500);
   if (!text) {
     main.querySelector('#message').value = '';
     main.querySelector('#message').focus();
@@ -1379,14 +1386,70 @@ function sendMentor(question) {
     id: idForSession(), kind: 'chat', title: text.length > 46 ? text.slice(0, 46) + '…' : text, messages: [],
   };
   student = loadStudent(student);
-  const reply = mentorReply(text);
-  chat = saveSession({
-    ...record,
-    messages: [...record.messages, { role: 'You', text }, { role: 'Mentor', text: reply }],
-  });
+  const questionMessage = { id: idForSession(), role: 'You', text };
+  const messages = [...record.messages, questionMessage];
+  let reply = { role: 'Mentor', text: mentorReply(text), source: 'practice' };
+  const localReview = /^(review my virtual portfolio|explain my life-stage result|explain the simulated market scenario)$/i.test(text);
+  if (localReview || location.protocol === 'file:') {
+    if (!localReview) reply.notice = 'Open Vamm from its Node server to use OpenAI.';
+    chat = saveSession({ ...record, messages: [...messages, reply] });
+    render();
+    focusComposer();
+    announce('Mentor replied. ' + reply.text);
+    return;
+  }
+
+  const controller = new AbortController();
+  mentorRequests.set(record.id, controller);
+  chat = saveSession({ ...record, messages });
   render();
   focusComposer();
-  announce('Mentor replied. ' + reply);
+  announce('Waiting for OpenAI…');
+  const unavailable = 'OpenAI couldn’t answer. Check the server and API key, then try again.';
+  try {
+    const input = messages.slice(-5).filter(item => ['You', 'Mentor'].includes(item?.role) && typeof item.text === 'string' && item.text.trim())
+      .map(item => ({ role: item.role === 'You' ? 'user' : 'assistant', content: item.text.trim().slice(0, 500) }));
+    const response = await fetch('/api/mentor', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(40_000)]), body: JSON.stringify({ messages: input }) });
+    if (response.ok) {
+      const payload = await response.json();
+      if (typeof payload?.reply !== 'string' || !payload.reply.trim() || payload.reply.length > 6000) throw new Error('Invalid reply');
+      reply = { role: 'Mentor', text: payload.reply, source: 'openai' };
+    } else if (response.status === 503) {
+      reply.notice = 'Add OPENAI_API_KEY to .env and restart Vamm to enable OpenAI chat.';
+    } else if (response.status === 404 || response.status === 405) {
+      reply.notice = 'Open Vamm from its Node server to use OpenAI.';
+    } else {
+      reply.notice = unavailable;
+    }
+  } catch {
+    reply.notice = unavailable;
+  } finally {
+    mentorRequests.delete(record.id);
+  }
+  if (controller.signal.aborted) return;
+
+  const latest = loadSessions(sessions).find(item => item.kind === 'chat' && item.id === record.id);
+  const index = latest?.messages.findIndex(item => item?.id === questionMessage.id) ?? -1;
+  if (index < 0) {
+    if (chat?.id === record.id) {
+      chat = latest ?? null;
+      if (page === 'mentor') render();
+    }
+    return;
+  }
+  const updated = latest.messages.slice();
+  updated.splice(index + 1, 0, reply);
+  const saved = saveSession({ ...latest, messages: updated });
+  if (chat?.id !== record.id) return;
+  chat = saved;
+  if (page !== 'mentor') return;
+  const log = main.querySelector('.log');
+  log.innerHTML = messageBubbles(saved.messages);
+  log.scrollTop = log.scrollHeight;
+  main.querySelector('#mentor-form button').disabled = false;
+  main.querySelector('#mentor-status').textContent = saved.messages.at(-1)?.notice ?? '';
+  announce('Mentor replied.');
 }
 
 function focusComposer(prompt = '') {
@@ -1572,6 +1635,7 @@ function confirmChatDeletion() {
   if (id === null || !main.querySelector('#chat-delete-dialog')?.open) return;
   const latest = loadSessions(sessions);
   const active = chat?.id === id;
+  mentorRequests.get(id)?.abort();
   sessions = latest.filter(item => !(item.kind === 'chat' && item.id === id));
   writeStorage(sessionKey, sessions);
   cancelChatDeletion(false);

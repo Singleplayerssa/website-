@@ -5,6 +5,7 @@ const sections = { home: 'student investment basics', academy: 'investing educat
 const maxRequestBytes = 8_192;
 const maxProviderBytes = 262_144;
 const requestLimit = 12;
+const defaultOpenAiModel = 'gpt-5.4-mini';
 let requests = [];
 let active = 0;
 
@@ -45,10 +46,18 @@ async function providerJson(url, headers, body, signal) {
   return readJson(response.body, maxProviderBytes);
 }
 
-async function generateQuiz({ quiz, count }, key, signal) {
+async function openAiText(options, key, signal) {
   const raw = await providerJson('https://api.openai.com/v1/responses', { Authorization: `Bearer ${key}` }, {
-    model: process.env.OPENAI_QUIZ_MODEL || 'gpt-5.4-mini',
-    store: false,
+    model: defaultOpenAiModel, store: false, ...options,
+  }, signal);
+  const content = Array.isArray(raw?.output) ? raw.output.flatMap(item => Array.isArray(item?.content) ? item.content : []) : [];
+  if (raw?.status !== 'completed' || content.some(item => item?.type === 'refusal')) throw unavailable();
+  return content.filter(item => item?.type === 'output_text' && typeof item.text === 'string').map(item => item.text).join('');
+}
+
+async function generateQuiz({ quiz, count }, key, signal) {
+  const output = await openAiText({
+    model: process.env.OPENAI_QUIZ_MODEL || defaultOpenAiModel,
     max_output_tokens: 600 + count * 350,
     instructions: `Write exactly ${count} distinct beginner investing questions in English using the supplied concepts. Include four-option multiple-choice and two-option true/false questions. For true/false, the only choices are True and False. Every question has exactly one correct zero-based answer index, a short explanation in why, and a brief concept tag. Use plain text, realistic distractors, and new fictional examples. Recalculate arithmetic. Avoid personalized advice, predictions, and current price claims.`,
     input: JSON.stringify({ topic: quiz.title, concepts: quiz.concepts, reviewedExamples: quiz.questions }),
@@ -59,13 +68,20 @@ async function generateQuiz({ quiz, count }, key, signal) {
         properties: { prompt: { type: 'string' }, choices: { type: 'array', minItems: 2, maxItems: 4, items: { type: 'string' } }, answer: { type: 'integer', enum: [0, 1, 2, 3] }, why: { type: 'string' }, tag: { type: 'string' } },
       } } },
     } } },
-  }, signal);
-  const content = Array.isArray(raw?.output) ? raw.output.flatMap(item => Array.isArray(item?.content) ? item.content : []) : [];
-  if (raw?.status !== 'completed' || content.some(item => item?.type === 'refusal')) throw unavailable();
-  const output = content.filter(item => item?.type === 'output_text' && typeof item.text === 'string').map(item => item.text).join('');
+  }, key, signal);
   const questions = validateQuizQuestions(JSON.parse(output)?.questions, count);
   if (!questions) throw unavailable();
   return { questions };
+}
+
+async function mentorReply(messages, key, signal) {
+  const reply = (await openAiText({
+    max_output_tokens: 700,
+    instructions: 'You are the Vamm Investment Mentor for students practicing with virtual money. Explain investing concepts in the language of the latest question. Use plain text, short paragraphs, and simple fictional examples. Offer general education only. Avoid personal investment recommendations, trades, predictions, and claims about current prices or news. You cannot see the student’s holdings, transactions, account, or live market data. For current data, point to Real Market or Search sources in Vamm. Stay on investing, money skills, and learning. If the question is unclear, ask a brief follow-up.',
+    input: messages,
+  }, key, signal)).trim();
+  if (!isText(reply, 6000)) throw unavailable();
+  return { reply };
 }
 
 function groundedAnswer(candidate) {
@@ -126,29 +142,43 @@ async function research({ section, query }, key, signal) {
 export async function handleAiRequest(request, response, route) {
   const loopback = [`127.0.0.1:${request.socket.localPort}`, `localhost:${request.socket.localPort}`];
   const host = request.headers.host;
+  const isQuiz = route === '/api/quiz';
+  const isMentor = route === '/api/mentor';
+  const bodyLimit = isMentor ? 16_384 : maxRequestBytes;
   try {
     if (request.method !== 'POST') throw problem(405, 'method_not_allowed', 'Use POST for this request.');
     if (!loopback.includes(host) || request.headers.origin !== `http://${host}`) throw problem(403, 'forbidden', 'This request must come from the local Vamm page.');
     if (request.headers['content-type']?.split(';')[0].trim() !== 'application/json') throw problem(415, 'invalid_type', 'Send a JSON request.');
-    if (Number(request.headers['content-length']) > maxRequestBytes) throw problem(413, 'too_large', 'The request is too long.');
+    if (Number(request.headers['content-length']) > bodyLimit) throw problem(413, 'too_large', 'The request is too long.');
     let body;
-    try { body = await readJson(request.iterator({ destroyOnReturn: false }), maxRequestBytes); }
+    try { body = await readJson(request.iterator({ destroyOnReturn: false }), bodyLimit); }
     catch (error) { throw error instanceof RangeError ? problem(413, 'too_large', 'The request is too long.') : invalid(); }
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw invalid();
 
-    const isQuiz = route === '/api/quiz';
     let input;
     if (isQuiz) {
       const quiz = quizPacks.find(item => item.id === body.topicId);
       const count = body.count;
       if (!quiz || !quizCounts.includes(count)) throw invalid();
       input = { quiz, count };
+    } else if (isMentor) {
+      const { messages } = body;
+      if (!Array.isArray(messages) || messages.length < 1 || messages.length > 5 || messages.at(-1)?.role !== 'user'
+        || messages.some(item => !['user', 'assistant'].includes(item?.role) || !isText(item?.content, 500))) {
+        throw problem(400, 'invalid_request', 'Send an investing question of up to 500 characters.');
+      }
+      input = messages.map(({ role, content }) => ({ role, content: content.trim() }));
     } else {
       if (typeof body.section !== 'string' || !Object.hasOwn(sections, body.section) || !isText(body.query, 400) || body.query.trim().length < 3) throw invalid();
       input = { section: body.section, query: body.query.trim() };
     }
-    const key = (isQuiz ? process.env.OPENAI_API_KEY : process.env.GEMINI_API_KEY)?.trim();
-    if (!key) throw problem(503, 'not_configured', isQuiz ? 'OpenAI is not connected yet. Add OPENAI_API_KEY to .env and restart Vamm, or try the reviewed sample quiz.' : 'Google source lookup is not connected yet. You can still open the sources on each page.');
+    const key = (isQuiz || isMentor ? process.env.OPENAI_API_KEY : process.env.GEMINI_API_KEY)?.trim();
+    if (!key) {
+      const message = isQuiz ? 'OpenAI is not connected yet. Add OPENAI_API_KEY to .env and restart Vamm, or try the reviewed sample quiz.'
+        : isMentor ? 'Add OPENAI_API_KEY to .env and restart Vamm to enable OpenAI chat.'
+          : 'Google source lookup is not connected yet. You can still open the sources on each page.';
+      throw problem(503, 'not_configured', message);
+    }
 
     // shortcut: limits apply to this localhost process; public hosting needs authentication and per-user quotas.
     const now = Date.now();
@@ -161,7 +191,7 @@ export async function handleAiRequest(request, response, route) {
     response.once('close', () => disconnect.abort());
     try {
       const signal = AbortSignal.any([disconnect.signal, deadline]);
-      const result = await (isQuiz ? generateQuiz : research)(input, key, signal);
+      const result = await (isQuiz ? generateQuiz : isMentor ? mentorReply : research)(input, key, signal);
       json(response, 200, result);
     } catch {
       const error = deadline.aborted ? problem(504, 'timed_out', 'The provider took too long. Please try again.') : unavailable();
